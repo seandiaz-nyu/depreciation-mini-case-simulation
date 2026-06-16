@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Depreciation Mini-Case Simulation | NYU Stern</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="tutorial-backdrop is-hidden" id="tutorialBackdrop"></div>
+    <div class="start-tip is-hidden" id="startTip">
+      <div class="tip-message">
+        <div class="tip-avatar" aria-hidden="true">
+          <span>CFO</span>
+          <i></i>
+        </div>
+        <div>
+          <strong id="tutorialTitle">Background information</strong>
+          <p id="tutorialText">
+            We just purchased equipment. Review our numbers before jumping into the depreciation
+            decisions.
+          </p>
+        </div>
+      </div>
+      <button class="tip-button" id="dismissTipButton" type="button">Next</button>
+    </div>
+    <main class="app-shell">
+      <section class="landing-screen" id="landingScreen" aria-labelledby="landing-title">
+        <div class="landing-copy">
+          <h1 id="landing-title">Depreciation Mini-Case Simulation</h1>
+          <p>
+            You are the CEO. Your CFO needs approval for how the company will
+            account for a new piece of equipment.
+          </p>
+        </div>
+        <div class="landing-scenario">
+          <h2>Short-term earnings focus</h2>
+          <p>
+            The board has made it clear they are concerned with short term
+            performance. If you don't maximize Net Income for the next 1-2
+            years, you could be fired.
+          </p>
+          <p>
+            Your CFO will ask you to approve three accounting decisions:
+            depreciation method, useful life, and residual value.
+          </p>
+          <button class="primary-button landing-button" id="startSimulationButton" type="button">
+            Start simulation
+          </button>
+        </div>
+      </section>
+
+      <div class="simulation-screen is-hidden" id="simulationScreen">
+        <section class="intro" aria-label="Simulation context">
+          <div class="intro-scenario" aria-labelledby="goalHeading">
+            <h2 class="context-heading" id="goalHeading">Goal</h2>
+            <h3 id="scenarioTitle">Short-term earnings focus</h3>
+            <p id="scenarioDescription">
+              The board has made it clear they are concerned with short term
+              performance. If you don't maximize Net Income for the next 1-2
+              years, you could be fired.
+            </p>
+          </div>
+
+          <div class="intro-case" aria-labelledby="backgroundHeading">
+            <h2 class="context-heading" id="backgroundHeading">Background information</h2>
+            <dl class="case-facts">
+              <div>
+                <dt>Equipment purchase cost</dt>
+                <dd>$100M</dd>
+              </div>
+              <div>
+                <dt>Expected annual revenue</dt>
+                <dd>$80M</dd>
+              </div>
+              <div>
+                <dt>
+                  Other operating costs
+                  <small>before depreciation</small>
+                </dt>
+                <dd>$35M</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        <section class="simulation-layout" aria-label="Depreciation simulation">
+          <aside class="story-panel" aria-label="CFO guidance">
+            <article class="cfo-card" id="cfoCard" aria-live="polite">
+              <div class="cfo-message">
+                <div class="cfo-avatar" aria-hidden="true">
+                  <span>CFO</span>
+                  <i></i>
+                </div>
+                <div class="cfo-copy">
+                  <div class="chat-bubble">
+                    <h2 id="cfoTitle">Which depreciation method should we use?</h2>
+                    <p id="cfoText">
+                      Straight-line makes depreciation expense even. Accelerated
+                      depreciation records more expense earlier and less later.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+        </aside>
+
+        <section class="decision-panel" aria-label="Policy decisions">
+          <div class="panel-heading">
+            <div>
+              <h2 id="decisionHeading">Decision 1 of 3</h2>
+            </div>
+            <div class="panel-actions">
+              <button class="primary-button" id="nextButton" type="button">Next decision</button>
+              <button class="secondary-button" id="resetButton" type="button">Start over</button>
+            </div>
+          </div>
+
+          <div class="controls-grid">
+            <fieldset class="control-card is-active" data-control="method">
+              <legend>Depreciation method</legend>
+              <div class="segmented" role="group" aria-label="Depreciation method">
+                <button class="segment" type="button" data-method="straight" aria-pressed="false">
+                  Straight-line
+                </button>
+                <button class="segment" type="button" data-method="accelerated" aria-pressed="false">
+                  Accelerated
+                </button>
+              </div>
+              <p>Straight-line is steady. Accelerated shifts expense earlier.</p>
+            </fieldset>
+
+            <fieldset class="control-card" data-control="life">
+              <legend>Useful life</legend>
+              <div class="range-row">
+                <input id="lifeInput" type="range" min="1" max="7" step="1" value="3" />
+                <output id="lifeOutput" for="lifeInput">3 years</output>
+              </div>
+              <p>Longer useful life usually lowers annual depreciation.</p>
+            </fieldset>
+
+            <fieldset class="control-card" data-control="residual">
+              <legend>Residual value</legend>
+              <div class="range-row">
+                <input
+                  id="residualInput"
+                  type="range"
+                  min="0"
+                  max="30"
+                  step="5"
+                  value="0"
+                />
+                <output id="residualOutput" for="residualInput">$0M</output>
+              </div>
+              <p>Higher residual value means less cost is depreciated.</p>
+            </fieldset>
+          </div>
+
+          <section class="preview-panel" aria-label="Live preview">
+            <article class="chart-card">
+              <div class="chart-heading">
+                <h2>Depreciation expense and book value</h2>
+              </div>
+              <div class="asset-table-wrap">
+                <table class="asset-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Year</th>
+                      <th scope="col">Depreciation expense</th>
+                      <th scope="col">Ending book value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="assetTableBody"></tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="chart-card">
+              <div class="chart-heading">
+                <div>
+                  <h2 id="incomeChartTitle">Net income over 5 years</h2>
+                </div>
+              </div>
+              <div class="income-chart" id="incomeChart" aria-label="Net income by year"></div>
+            </article>
+          </section>
+
+          <section class="final-panel is-hidden" id="finalPanel" aria-live="polite">
+            <h2 id="finalTitle">Results</h2>
+            <p id="finalText"></p>
+          </section>
+        </section>
+      </section>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
