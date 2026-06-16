@@ -25,7 +25,7 @@
       <button class="tip-button" id="dismissTipButton" type="button">Next</button>
     </div>
     <main class="app-shell">
-      <section class="landing-screen" id="landingScreen" aria-labelledby="landing-title">
+      <section class="landing-screen is-hidden" id="landingScreen" aria-labelledby="landing-title">
         <div class="landing-copy">
           <h1 id="landing-title">Depreciation Mini-Case Simulation</h1>
           <p>
@@ -50,7 +50,7 @@
         </div>
       </section>
 
-      <div class="simulation-screen is-hidden" id="simulationScreen">
+      <div class="simulation-screen" id="simulationScreen">
         <section class="intro" aria-label="Simulation context">
           <div class="intro-scenario" aria-labelledby="goalHeading">
             <h2 class="context-heading" id="goalHeading">Goal</h2>
@@ -85,23 +85,16 @@
         </section>
 
         <section class="simulation-layout" aria-label="Depreciation simulation">
-          <aside class="story-panel" aria-label="CFO guidance">
-            <article class="cfo-card" id="cfoCard" aria-live="polite">
-              <div class="cfo-message">
-                <div class="cfo-avatar" aria-hidden="true">
-                  <span>CFO</span>
-                  <i></i>
-                </div>
-                <div class="cfo-copy">
-                  <div class="chat-bubble">
-                    <h2 id="cfoTitle">Which depreciation method should we use?</h2>
-                    <p id="cfoText">
-                      Straight-line makes depreciation expense even. Accelerated
-                      depreciation records more expense earlier and less later.
-                    </p>
-                  </div>
-                </div>
+          <aside class="story-panel" aria-label="WorkChat">
+            <header class="workchat-header">
+              <div>
+                <h2>WorkChat</h2>
+                <p>Jordan Lee, CFO</p>
               </div>
+              <span class="chat-status">Online</span>
+            </header>
+            <article class="cfo-card" id="cfoCard" aria-live="polite">
+              <div class="chat-thread" id="chatThread"></div>
             </article>
         </aside>
 
@@ -112,9 +105,13 @@
             </div>
             <div class="panel-actions">
               <button class="primary-button" id="nextButton" type="button">Next decision</button>
-              <button class="secondary-button" id="resetButton" type="button">Start over</button>
             </div>
           </div>
+
+          <section class="final-panel is-hidden" id="finalPanel" aria-live="polite">
+            <h2 id="finalTitle">Results</h2>
+            <p id="finalText"></p>
+          </section>
 
           <div class="controls-grid">
             <fieldset class="control-card is-active" data-control="method">
@@ -127,7 +124,6 @@
                   Accelerated
                 </button>
               </div>
-              <p>Straight-line is steady. Accelerated shifts expense earlier.</p>
             </fieldset>
 
             <fieldset class="control-card" data-control="life">
@@ -136,7 +132,6 @@
                 <input id="lifeInput" type="range" min="1" max="7" step="1" value="3" />
                 <output id="lifeOutput" for="lifeInput">3 years</output>
               </div>
-              <p>Longer useful life usually lowers annual depreciation.</p>
             </fieldset>
 
             <fieldset class="control-card" data-control="residual">
@@ -152,7 +147,6 @@
                 />
                 <output id="residualOutput" for="residualInput">$0M</output>
               </div>
-              <p>Higher residual value means less cost is depreciated.</p>
             </fieldset>
           </div>
 
@@ -181,13 +175,18 @@
                   <h2 id="incomeChartTitle">Net income over 5 years</h2>
                 </div>
               </div>
+              <div class="target-panel" id="incomeTargetPanel" aria-live="polite">
+                <div>
+                  <span class="target-label">Years 1-2 target</span>
+                  <strong id="incomeTargetStatus">Choose a method to test performance.</strong>
+                </div>
+                <div class="target-thresholds" aria-label="Years 1 and 2 net income thresholds">
+                  <span class="target-chip danger">Danger below $50M</span>
+                  <span class="target-chip bonus">Bonus at $60M+</span>
+                </div>
+              </div>
               <div class="income-chart" id="incomeChart" aria-label="Net income by year"></div>
             </article>
-          </section>
-
-          <section class="final-panel is-hidden" id="finalPanel" aria-live="polite">
-            <h2 id="finalTitle">Results</h2>
-            <p id="finalText"></p>
           </section>
         </section>
       </section>
