@@ -587,9 +587,9 @@ function createChatMessage(
 function getChatMessages(prompt, reviewMode) {
   const messages = [
     {
-      title: "I need your attention on this equipment purchase.",
+      title: "Hey boss, have a minute?",
       text:
-        "I built a dashboard so we can make a few depreciation decisions together for the new equipment purchase. The board is especially focused on the next 1-2 years of performance. When you're ready, open the dashboard.",
+        "We need to make a few calls on the new equipment purchase, and the board is especially focused on the next 1-2 years of performance. I built a dashboard so we can work through the decisions together. When you're ready, open the dashboard.",
       actions: state.dashboardOpen
         ? []
         : [
