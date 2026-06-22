@@ -510,6 +510,21 @@ h1 {
   animation: chat-message-in 280ms ease-out both;
 }
 
+.cfo-message.is-new .chat-bubble,
+.cfo-message.is-message-spotlight .chat-bubble {
+  border-color: rgba(8, 127, 140, 0.95);
+  background: #ffffff;
+  box-shadow:
+    0 0 0 4px rgba(8, 127, 140, 0.18),
+    0 14px 34px rgba(8, 127, 140, 0.18);
+}
+
+.cfo-message.is-new .chat-bubble::before,
+.cfo-message.is-message-spotlight .chat-bubble::before {
+  border-color: rgba(8, 127, 140, 0.95);
+  background: #ffffff;
+}
+
 @keyframes chat-message-in {
   from {
     opacity: 0;
@@ -787,7 +802,7 @@ h1 {
 
 .control-card {
   min-width: 0;
-  padding-block: 14px;
+  padding: 14px 16px;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -844,10 +859,18 @@ h1 {
 }
 
 .control-card legend {
+  display: block;
+  float: left;
+  width: 100%;
+  margin: 0 0 10px;
   padding: 0;
   color: var(--ink);
   font-size: 0.98rem;
   font-weight: 900;
+}
+
+.control-card > :not(legend) {
+  clear: both;
 }
 
 .range-row {
@@ -855,7 +878,7 @@ h1 {
   grid-template-columns: minmax(0, 1fr) 84px;
   gap: 12px;
   align-items: center;
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 input[type="range"] {

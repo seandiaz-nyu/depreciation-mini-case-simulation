@@ -1,4 +1,6 @@
 const facts = {
+  companyName: "Aster Compute Systems",
+  equipmentName: "AI accelerator server racks",
   assetCost: 100,
   annualRevenue: 80,
   otherCosts: 35,
@@ -18,7 +20,7 @@ const reasonablePolicy = {
 const scenario = {
   title: "Short-term earnings focus",
   description:
-    "The board is paying close attention to the next 1-2 years of performance after this equipment purchase.",
+    `Aster Compute Systems' board is paying close attention to the next 1-2 years of performance after this AI infrastructure purchase.`,
 };
 
 const cfoPrompts = [
@@ -32,16 +34,16 @@ const cfoPrompts = [
   {
     key: "life",
     step: "Decision 2 of 3",
-    title: "How long will the equipment be useful?",
+    title: "How long will the AI accelerator racks be useful?",
     text:
       "Start with a 3-year useful life. You can test 1 to 7 years; a longer useful life spreads the cost over more years and usually raises net income now. Just remember that anything beyond 5 years may need extra support.",
   },
   {
     key: "residual",
     step: "Decision 3 of 3",
-    title: "What will the equipment be worth at the end?",
+    title: "What will the racks be worth at the end?",
     text:
-      "A $0M residual value is the simplest starting estimate. A higher residual value means less of the equipment cost gets depreciated, but the estimate has to be believable when we eventually dispose of the asset.",
+      "A $0M residual value is the simplest starting estimate. A higher residual value means less of the rack cost gets depreciated, but the estimate has to be believable when we eventually dispose of the asset.",
   },
   {
     key: "review",
@@ -56,7 +58,7 @@ const tutorialSteps = {
   background: {
     title: "Background information",
     text:
-      "We just purchased equipment. Review our numbers before jumping into the depreciation decisions.",
+      "Aster Compute Systems just purchased AI accelerator server racks. Review our numbers before jumping into the depreciation decisions.",
     button: "Next",
   },
   decision: {
@@ -79,6 +81,7 @@ let state = {
   dashboardOpen: false,
   chatStage: "opening",
   tourSkipped: false,
+  replayMode: false,
   method: null,
   usefulLife: 3,
   residualValue: 0,
@@ -370,7 +373,7 @@ function getUsefulLifeWarning(usefulLife = state.usefulLife) {
       severity: "warning",
       title: "I would document the 6-year life very carefully.",
       text:
-        "A 6-year useful life may invite scrutiny. Equipment of this type does not typically last longer than 5 years, so we should be prepared to support why this asset is different.",
+        "A 6-year useful life may invite scrutiny. AI accelerator server racks do not typically stay economically useful beyond 5 years, so we should be prepared to support why these racks are different.",
     };
   }
 
@@ -379,7 +382,7 @@ function getUsefulLifeWarning(usefulLife = state.usefulLife) {
       severity: "urgent",
       title: "I would not want to defend a 7-year life without very strong evidence.",
       text:
-        "A 7-year useful life is far outside the norm. If the equipment does not actually last that long, we may have to recognize new expenses sooner than expected and answer uncomfortable questions about the original estimate.",
+        "A 7-year useful life is far outside the norm for AI infrastructure. If the racks do not actually stay useful that long, we may have to recognize new expenses sooner than expected and answer uncomfortable questions about the original estimate.",
     };
   }
 
@@ -408,7 +411,7 @@ function getResidualWarning(
           ? "This residual value would be hard to defend."
           : "This residual value needs support before I would be comfortable with it.",
       text:
-        `${money(residualValue)} residual value is aggressive with a ${usefulLife}-year useful life. Once we are already assuming a long life, assuming more than ${money(10)} of value at disposal raises the risk of a future write-down if we cannot sell the equipment for that price.`,
+        `${money(residualValue)} residual value is aggressive with a ${usefulLife}-year useful life. Once we are already assuming a long life, assuming more than ${money(10)} of value at disposal raises the risk of a future write-down if we cannot sell the racks for that price.`,
     };
   }
 
@@ -419,7 +422,7 @@ function getResidualWarning(
         ? "This residual value looks too optimistic without market evidence."
         : "I would document this residual value carefully.",
     text:
-      `${money(residualValue)} residual value is above the normal supportable range for a ${usefulLife}-year useful life. If we cannot sell the equipment for that amount at the end of its use for us, we could face a write-down later.`,
+      `${money(residualValue)} residual value is above the normal supportable range for a ${usefulLife}-year useful life. If we cannot sell the racks for that amount at the end of their use for us, we could face a write-down later.`,
   };
 }
 
@@ -491,8 +494,8 @@ function getAccountingTrouble(policy = state) {
       key: "audit",
       title: "18 months later: Audit failure and termination",
       text:
-        `Eighteen months later, the assumptions were too aggressive to defend. The policy recorded ${money(accountingDetail.chosenDepreciation)} of depreciation in Years 1-2. Under a reasonable 5-year life and ${money(10)} residual value, depreciation would have been ${money(accountingDetail.reasonableDepreciation)}. That inflated Years 1-2 net income by about ${money(accountingDetail.inflatedIncome)}. The auditors forced a correction, and the board terminated the CEO after concluding that management had signed off on estimates this far outside the norm.`,
-      detailTitle: "What failed",
+        `Eighteen months later, the assumptions for Aster Compute Systems' AI accelerator racks were too aggressive to defend. The policy recorded ${money(accountingDetail.chosenDepreciation)} of depreciation in Years 1-2. Under a reasonable 5-year life and ${money(10)} residual value, depreciation would have been ${money(accountingDetail.reasonableDepreciation)}. That inflated Years 1-2 net income by about ${money(accountingDetail.inflatedIncome)}. The auditors forced a correction, and the board terminated the CEO after concluding that management had signed off on estimates this far outside the norm.`,
+      detailTitle: "Accounting analysis",
       detailText:
         `${assumptionSummary}. The issue was not just that near-term income improved; it improved because depreciation expense had been delayed using assumptions the company could not support. Because the CEO approved the policy, the audit failure became a leadership failure too.`,
     };
@@ -502,12 +505,12 @@ function getAccountingTrouble(policy = state) {
     key: "press",
     title: "12 months later: Bonus rescinded after accounting controversy",
     text:
-      `A few quarters later, analysts noticed the depreciation estimate. The policy recorded ${money(accountingDetail.chosenDepreciation)} of depreciation in Years 1-2 versus ${money(accountingDetail.reasonableDepreciation)} under a reasonable 5-year life and ${money(10)} residual value. That lifted Years 1-2 net income by about ${money(accountingDetail.inflatedIncome)}. The board concluded that the bonus had been earned on assumptions that were too aggressive, so it rescinded the payout.`,
-    detailTitle: "Why the board rescinded the bonus",
+      `A few quarters later, analysts noticed the depreciation estimate for Aster Compute Systems' AI accelerator racks. The policy recorded ${money(accountingDetail.chosenDepreciation)} of depreciation in Years 1-2 versus ${money(accountingDetail.reasonableDepreciation)} under a reasonable 5-year life and ${money(10)} residual value. That lifted Years 1-2 net income by about ${money(accountingDetail.inflatedIncome)}. The board concluded that the bonus had been earned on assumptions that were too aggressive, so it rescinded the payout.`,
+    detailTitle: "Accounting analysis",
     detailText:
-      `${assumptionSummary}. Auditors and analysts viewed those assumptions as aggressive because they reduced depreciation early while increasing the risk of a later write-down if the equipment could not be used or sold as estimated. The company avoided a full audit failure, but the board no longer treated the reported earnings as a clean basis for incentive pay.`,
+      `${assumptionSummary}. Auditors and analysts viewed those assumptions as aggressive because they reduced depreciation early while increasing the risk of a later write-down if the racks could not be used or sold as estimated. Aster avoided a full audit failure, but the board no longer treated the reported earnings as a clean basis for incentive pay.`,
     headline:
-      "The Wall Street Journal: Company’s Depreciation Math Raises Questions About Earnings",
+      "The Wall Street Journal: Aster Compute’s AI Rack Depreciation Raises Questions About Earnings",
   };
 }
 
@@ -518,9 +521,9 @@ function getEmploymentOutcome(metrics) {
       title: "6 months later: You got fired",
       text:
         `${money(metrics.shortTermIncome)} in Years 1-2 net income missed the board's minimum target. The board decided the performance gap was too large and replaced the CEO.`,
-      detailTitle: "What happened",
+      detailTitle: "Accounting analysis",
       detailText:
-        "The accounting policy may have been supportable, but it did not produce the near-term earnings story the board wanted. The company recognized too much depreciation expense early to satisfy the short-term mandate.",
+        "The accounting policy may have been supportable, but it did not produce the near-term earnings story the board wanted. Aster recognized too much depreciation expense early to satisfy the short-term mandate.",
     };
   }
 
@@ -530,7 +533,7 @@ function getEmploymentOutcome(metrics) {
       title: "12 months later: You earned the bonus",
       text:
         `${money(metrics.shortTermIncome)} in Years 1-2 net income cleared the bonus threshold. The board was pleased with the near-term performance and approved the bonus.`,
-      detailTitle: "Why it worked",
+      detailTitle: "Accounting analysis",
       detailText:
         `The ${state.usefulLife}-year useful life was a little higher than the norm, but the ${money(state.residualValue)} residual value stayed within a supportable range. The policy improved near-term earnings without crossing into an audit failure.`,
     };
@@ -541,7 +544,7 @@ function getEmploymentOutcome(metrics) {
     title: "12 months later: You kept your job, but no bonus",
     text:
       `${money(metrics.shortTermIncome)} in Years 1-2 net income kept you above the danger line, but it did not reach the bonus threshold. The board kept you in the role but held back the payout. The good news: your assumptions were supportable, which was exactly what a conservative accounting policy was supposed to achieve.`,
-    detailTitle: "What you did right",
+    detailTitle: "Accounting analysis",
     detailText:
       "You avoided leaning too hard on useful life or residual value to manufacture short-term earnings. That made the policy easier to explain to auditors, analysts, and the board.",
   };
@@ -588,7 +591,7 @@ function renderOutcomeDetails(outcome, metrics) {
     headline.className = "outcome-headline";
     const label = document.createElement("span");
     const title = document.createElement("strong");
-    label.textContent = "Fictional press clipping";
+    label.textContent = "Press coverage";
     title.textContent = outcome.headline;
     headline.append(label, title);
     els.outcomeDetails.append(headline);
@@ -645,12 +648,13 @@ function getCfoReviewMessage() {
 }
 
 function createChatMessage(
-  { title, text, actionLabel, action, actions, warnings = [] },
+  { title, text, actionLabel, action, actions, warnings = [], spotlight = false },
   isNew = false
 ) {
   const message = document.createElement("div");
   message.className = "cfo-message";
   message.classList.toggle("is-new", isNew);
+  message.classList.toggle("is-message-spotlight", spotlight);
 
   message.innerHTML = `
     <div class="cfo-avatar" aria-hidden="true" title="Jordan Lee, CFO">
@@ -713,23 +717,30 @@ function createChatMessage(
 
 function getChatMessages(prompt, reviewMode) {
   const messages = [
-    {
-      title: "Hey boss, have a minute?",
-      text:
-        "We need to make a few calls on the new equipment purchase, and the board is especially focused on the next 1-2 years of performance. I built a dashboard so we can work through the decisions together. When you're ready, open the dashboard.",
-      actions: state.dashboardOpen
-        ? []
-        : [
-            { label: "Open dashboard", action: "open-dashboard" },
-          ],
-    },
+    state.replayMode
+      ? {
+          title: "Dashboard reopened.",
+          text:
+            "I reopened the dashboard with all three decisions available. Try a different policy and we can compare how the numbers move.",
+        }
+      : {
+          title: "Hey boss, have a minute?",
+          text:
+            "We need to make a few calls on Aster Compute Systems' new AI accelerator server racks. I built a dashboard so we can work through the decisions together. When you're ready, open the dashboard. Quick reminder: the board is especially focused on the next 1-2 years of performance.",
+          actions: state.dashboardOpen
+            ? []
+            : [
+                { label: "Open dashboard", action: "open-dashboard" },
+              ],
+        },
   ];
 
   if (state.dashboardOpen && !state.tourSkipped) {
     messages.push({
       title: "First, here is the background.",
       text:
-        "The new equipment cost $100M. We expect $80M in annual revenue and $35M in other operating costs before depreciation. These are the numbers the dashboard will use.",
+        "Aster bought AI accelerator server racks for $100M. We expect $80M in annual revenue from the added compute capacity and $35M in other operating costs before depreciation. These are the numbers the dashboard will use.",
+      spotlight: state.chatStage === "background",
       actions:
         state.chatStage === "background"
           ? [{ label: "Next: decision area", action: "show-decision-area" }]
@@ -745,6 +756,7 @@ function getChatMessages(prompt, reviewMode) {
       title: "Now look at the decision area.",
       text:
         "This is where we will choose the depreciation method, useful life, and residual value. Each choice changes the income picture the board will see.",
+      spotlight: state.chatStage === "decision",
       actionLabel: state.chatStage === "decision" ? "Start decisions" : null,
       action: "start-decisions",
     });
@@ -752,8 +764,10 @@ function getChatMessages(prompt, reviewMode) {
 
   if (state.chatStage === "active" || state.activeStep > 0 || state.approved) {
     const promptLimit = state.approved ? cfoPrompts.length - 1 : state.activeStep;
+    const reviewPromptIndex = cfoPrompts.length - 1;
+    const promptStart = state.replayMode ? reviewPromptIndex : 0;
 
-    for (let index = 0; index <= promptLimit; index += 1) {
+    for (let index = promptStart; index <= promptLimit; index += 1) {
       const chatPrompt = cfoPrompts[index];
       const isReviewPrompt = chatPrompt.key === "review";
 
@@ -775,17 +789,51 @@ function getChatMessages(prompt, reviewMode) {
 function renderChatMessages(prompt, reviewMode) {
   const messages = getChatMessages(prompt, reviewMode);
   const previousCount = messages.length < previousChatMessageCount ? 0 : previousChatMessageCount;
+  const shouldFocusNewMessage = messages.length > previousCount && previousCount > 0;
 
   els.chatThread.innerHTML = "";
+  els.chatThread.style.paddingBottom = "";
   messages.forEach((message, index) => {
     els.chatThread.append(createChatMessage(message, index >= previousCount));
   });
   previousChatMessageCount = messages.length;
 
   requestAnimationFrame(() => {
-    els.cfoCard.scrollTo({
-      top: els.cfoCard.scrollHeight,
-      behavior: messages.length > previousCount ? "smooth" : "auto",
+    const firstNewMessage = shouldFocusNewMessage
+      ? els.chatThread.querySelector(".cfo-message.is-new")
+      : null;
+    const cardStyles = getComputedStyle(els.cfoCard);
+    const cardPaddingTop = parseFloat(cardStyles.paddingTop) || 0;
+    const cardPaddingBottom = parseFloat(cardStyles.paddingBottom) || 0;
+    const currentScrollTop = els.cfoCard.scrollTop;
+    const viewportTop = currentScrollTop + cardPaddingTop;
+    const viewportBottom = currentScrollTop + els.cfoCard.clientHeight - cardPaddingBottom;
+    const desiredScrollTop = (() => {
+      if (!firstNewMessage) {
+        return els.cfoCard.scrollHeight;
+      }
+
+      const messageTop = firstNewMessage.offsetTop;
+      const messageBottom = messageTop + firstNewMessage.offsetHeight;
+      const messageTopTarget = Math.max(0, messageTop - cardPaddingTop - 10);
+
+      if (messageTop < viewportTop) {
+        return messageTopTarget;
+      }
+
+      if (messageBottom > viewportBottom) {
+        return Math.min(messageTopTarget, currentScrollTop + messageBottom - viewportBottom + 8);
+      }
+
+      return Math.min(currentScrollTop, messageTopTarget);
+    })();
+    const maxScrollTop = Math.max(0, els.cfoCard.scrollHeight - els.cfoCard.clientHeight);
+
+    requestAnimationFrame(() => {
+      els.cfoCard.scrollTo({
+        top: Math.min(desiredScrollTop, maxScrollTop),
+        behavior: messages.length > previousCount ? "smooth" : "auto",
+      });
     });
   });
 }
@@ -887,15 +935,16 @@ function render() {
   renderFinal(metrics);
 }
 
-function resetGame() {
+function resetGame({ skipTutorial = false } = {}) {
   state = {
     started: true,
     activeStep: 0,
     approved: false,
     tutorialStep: null,
-    dashboardOpen: false,
-    chatStage: "opening",
-    tourSkipped: false,
+    dashboardOpen: skipTutorial,
+    chatStage: skipTutorial ? "active" : "opening",
+    tourSkipped: skipTutorial,
+    replayMode: skipTutorial,
     method: null,
     usefulLife: 3,
     residualValue: 0,
@@ -959,7 +1008,9 @@ els.nextButton.addEventListener("click", () => {
   render();
 });
 
-els.playAgainButton.addEventListener("click", resetGame);
+els.playAgainButton.addEventListener("click", () => {
+  resetGame({ skipTutorial: true });
+});
 els.longTermButton.disabled = true;
 els.longTermButton.title = "Long-term focus scenario is next on the roadmap.";
 
