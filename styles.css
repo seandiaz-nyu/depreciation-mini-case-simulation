@@ -921,12 +921,17 @@ output {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   border: 1px solid #e0e8ec;
   border-radius: 8px;
   margin-bottom: 14px;
   padding: 10px 12px;
   background: #f8fafb;
+}
+
+.target-panel > div:first-child {
+  min-width: min(100%, 320px);
 }
 
 .target-label {
@@ -942,6 +947,7 @@ output {
   margin-top: 3px;
   color: var(--ink);
   font-size: 0.94rem;
+  line-height: 1.25;
 }
 
 .target-thresholds {
@@ -987,20 +993,22 @@ output {
   display: grid;
   grid-template-columns: repeat(var(--year-count, 3), minmax(72px, 1fr));
   gap: 12px;
-  min-height: 220px;
+  min-height: calc(var(--track-height, 156px) + 78px);
   align-items: end;
   overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .chart-column {
   display: grid;
-  grid-template-rows: 24px 156px 22px;
+  grid-template-rows: 24px var(--track-height, 156px) 36px;
   gap: 8px;
   min-width: 0;
 }
 
 .chart-value,
 .year-label {
+  min-height: 36px;
   color: var(--muted);
   font-size: 0.8rem;
   font-weight: 850;
@@ -1019,34 +1027,41 @@ output {
 }
 
 .column-track {
-  display: flex;
-  align-items: end;
-  justify-content: center;
-  border-bottom: 1px solid var(--line);
+  position: relative;
+  min-height: var(--track-height, 156px);
 }
 
 .chart-column.is-target-window .column-track {
-  border-color: rgba(8, 127, 140, 0.28);
   background: linear-gradient(180deg, rgba(8, 127, 140, 0.05), transparent 72%);
 }
 
-.column-track.small {
-  min-height: 112px;
+.column-track::after {
+  content: "";
+  position: absolute;
+  top: var(--baseline-y, 156px);
+  right: 0;
+  left: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.chart-column.is-target-window .column-track::after {
+  border-color: rgba(8, 127, 140, 0.28);
 }
 
 .vertical-bar {
+  position: absolute;
+  top: calc(var(--baseline-y, 156px) - var(--bar-height, 0px));
+  left: 50%;
+  transform: translateX(-50%);
   width: min(44px, 58%);
   min-width: 14px;
   min-height: 4px;
   border-radius: 6px 6px 0 0;
+  height: var(--bar-height, 0px);
 }
 
 .income-bar {
   background: var(--green);
-}
-
-.income-bar.is-negative {
-  background: var(--red);
 }
 
 .income-bar.is-danger {
@@ -1059,6 +1074,12 @@ output {
 
 .income-bar.is-bonus {
   background: var(--green);
+}
+
+.income-bar.is-negative {
+  top: var(--baseline-y, 156px);
+  border-radius: 0 0 6px 6px;
+  background: var(--red);
 }
 
 .asset-table-wrap {
@@ -1345,7 +1366,7 @@ output {
   }
 
   .chart-column {
-    grid-template-rows: 24px 126px 22px;
+    grid-template-rows: 24px var(--track-height, 126px) 36px;
   }
 
   .vertical-bar {

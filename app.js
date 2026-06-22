@@ -29,7 +29,7 @@ const cfoPrompts = [
     step: "Decision 1 of 3",
     title: "Which depreciation method should we use?",
     text:
-      "Straight-line makes depreciation expense even. Accelerated depreciation records more expense earlier and less later.",
+      "Straight-line makes depreciation expense even. Double-declining balance records more expense earlier and less later.",
   },
   {
     key: "life",
@@ -194,7 +194,7 @@ function sum(values) {
   return values.reduce((total, value) => total + value, 0);
 }
 
-function depreciationForYear(policy, year) {
+function depreciationForYear(policy, year, beginningBookValue = facts.assetCost) {
   const depreciableCost = facts.assetCost - policy.residualValue;
 
   if (year > policy.usefulLife) {
@@ -205,9 +205,12 @@ function depreciationForYear(policy, year) {
     return depreciableCost / policy.usefulLife;
   }
 
-  const yearsSum = (policy.usefulLife * (policy.usefulLife + 1)) / 2;
-  const remainingYears = policy.usefulLife - year + 1;
-  return depreciableCost * (remainingYears / yearsSum);
+  if (year === policy.usefulLife) {
+    return Math.max(0, beginningBookValue - policy.residualValue);
+  }
+
+  const doubleDecliningRate = 2 / policy.usefulLife;
+  return beginningBookValue * doubleDecliningRate;
 }
 
 function getIncomeHorizon(policy = state) {
@@ -220,7 +223,7 @@ function calculateSchedule(policy = state, years = getIncomeHorizon(policy)) {
 
   for (let year = 1; year <= years; year += 1) {
     const depreciation = Math.min(
-      depreciationForYear(policy, year),
+      depreciationForYear(policy, year, bookValue),
       Math.max(0, bookValue - policy.residualValue)
     );
     bookValue = Math.max(policy.residualValue, bookValue - depreciation);
@@ -302,14 +305,34 @@ function getBenchmark() {
   return { bestShortTerm };
 }
 
+function getIncomeChartScale() {
+  const allNetIncomeValues = allPossiblePolicies()
+    .flatMap((policy) => calculateSchedule(policy).map((row) => row.netIncome));
+
+  return {
+    maxPositiveIncome: Math.max(...allNetIncomeValues, 0),
+    maxNegativeIncome: Math.max(...allNetIncomeValues.map((value) => -value), 0),
+  };
+}
+
 function renderIncomeChart(schedule, metrics) {
-  const maxIncome = Math.max(...schedule.map((row) => Math.abs(row.netIncome)), 1);
+  const scale = getIncomeChartScale();
+  const hasNegativeIncome = schedule.some((row) => row.netIncome < 0);
+  const maxPositiveIncome = scale.maxPositiveIncome;
+  const maxNegativeIncome = hasNegativeIncome ? scale.maxNegativeIncome : 0;
+  const trackHeight = hasNegativeIncome ? 196 : 156;
+  const incomeRange = Math.max(maxPositiveIncome + maxNegativeIncome, 1);
+  const baselineY = hasNegativeIncome
+    ? (maxPositiveIncome / incomeRange) * trackHeight
+    : trackHeight;
   const performanceStatus = getPerformanceStatus(metrics);
   els.incomeChart.style.setProperty("--year-count", schedule.length);
+  els.incomeChart.style.setProperty("--track-height", `${trackHeight}px`);
+  els.incomeChart.style.setProperty("--baseline-y", `${baselineY}px`);
 
   els.incomeChart.innerHTML = schedule
     .map((row) => {
-      const height = Math.max(4, (Math.abs(row.netIncome) / maxIncome) * 148);
+      const height = Math.max(4, (Math.abs(row.netIncome) / incomeRange) * trackHeight);
       const barClasses = ["income-bar"];
       const columnClasses = ["chart-column"];
 
@@ -326,7 +349,7 @@ function renderIncomeChart(schedule, metrics) {
         <div class="${columnClasses.join(" ")}">
           <div class="chart-value">${money(row.netIncome)}</div>
           <div class="column-track">
-            <div class="vertical-bar ${barClasses.join(" ")}" style="height: ${height}px"></div>
+            <div class="vertical-bar ${barClasses.join(" ")}" style="--bar-height: ${height}px"></div>
           </div>
           <div class="year-label">Year ${row.year}${row.year <= 2 ? "<span>target</span>" : ""}</div>
         </div>
@@ -364,7 +387,7 @@ function renderAssetTable(schedule) {
 }
 
 function methodLabel(method) {
-  return method === "straight" ? "straight-line" : "accelerated";
+  return method === "straight" ? "straight-line" : "double-declining balance";
 }
 
 function getUsefulLifeWarning(usefulLife = state.usefulLife) {
@@ -628,7 +651,7 @@ function getCfoReviewMessage() {
 
   if (state.method === "accelerated") {
     notes.push(
-      "Accelerated depreciation moves more expense into the early years, which usually lowers near-term net income and raises it later."
+      "Double-declining balance moves more expense into the early years, which usually lowers near-term net income and raises it later."
     );
   } else {
     notes.push(
@@ -916,7 +939,9 @@ function render() {
     state.activeStep === cfoPrompts.length - 1
       ? "Approve policy"
       : state.activeStep === cfoPrompts.length - 2
-        ? "Review choices"
+        ? state.replayMode
+          ? "Review policy"
+          : "Review choices"
         : "Next decision";
   els.nextButton.disabled =
     state.chatStage !== "active" || state.approved || (prompt.key === "method" && !hasMethod);
@@ -938,7 +963,7 @@ function render() {
 function resetGame({ skipTutorial = false } = {}) {
   state = {
     started: true,
-    activeStep: 0,
+    activeStep: skipTutorial ? cfoPrompts.length - 2 : 0,
     approved: false,
     tutorialStep: null,
     dashboardOpen: skipTutorial,
