@@ -9,6 +9,12 @@ const performanceTargets = {
   bonusShortTermIncome: 60,
 };
 
+const reasonablePolicy = {
+  method: "straight",
+  usefulLife: 5,
+  residualValue: 10,
+};
+
 const scenario = {
   title: "Short-term earnings focus",
   description:
@@ -110,12 +116,16 @@ const els = {
   previewPanel: document.querySelector(".preview-panel"),
   incomeTargetPanel: document.querySelector("#incomeTargetPanel"),
   incomeTargetStatus: document.querySelector("#incomeTargetStatus"),
+  incomeTargetChips: document.querySelector("#incomeTargetChips"),
   incomeChartTitle: document.querySelector("#incomeChartTitle"),
   incomeChart: document.querySelector("#incomeChart"),
   assetTableBody: document.querySelector("#assetTableBody"),
   finalPanel: document.querySelector("#finalPanel"),
   finalTitle: document.querySelector("#finalTitle"),
   finalText: document.querySelector("#finalText"),
+  outcomeDetails: document.querySelector("#outcomeDetails"),
+  playAgainButton: document.querySelector("#playAgainButton"),
+  longTermButton: document.querySelector("#longTermButton"),
 };
 
 function money(value) {
@@ -326,6 +336,13 @@ function renderIncomeTarget(metrics) {
   const performanceStatus = getPerformanceStatus(metrics);
   els.incomeTargetPanel.dataset.status = performanceStatus.key;
   els.incomeTargetStatus.textContent = performanceStatus.label;
+
+  const chips = {
+    danger: `<span class="target-chip danger">Danger below ${money(performanceTargets.dangerShortTermIncome)}</span>`,
+    bonus: `<span class="target-chip bonus">Bonus at ${money(performanceTargets.bonusShortTermIncome)}+</span>`,
+  };
+
+  els.incomeTargetChips.innerHTML = chips[performanceStatus.key] || "";
 }
 
 function renderAssetTable(schedule) {
@@ -351,7 +368,7 @@ function getUsefulLifeWarning(usefulLife = state.usefulLife) {
   if (usefulLife === 6) {
     return {
       severity: "warning",
-      title: "I would flag this for documentation.",
+      title: "I would document the 6-year life very carefully.",
       text:
         "A 6-year useful life may invite scrutiny. Equipment of this type does not typically last longer than 5 years, so we should be prepared to support why this asset is different.",
     };
@@ -360,7 +377,7 @@ function getUsefulLifeWarning(usefulLife = state.usefulLife) {
   if (usefulLife >= 7) {
     return {
       severity: "urgent",
-      title: "I am not comfortable with this assumption.",
+      title: "I would not want to defend a 7-year life without very strong evidence.",
       text:
         "A 7-year useful life is far outside the norm. If the equipment does not actually last that long, we may have to recognize new expenses sooner than expected and answer uncomfortable questions about the original estimate.",
     };
@@ -388,8 +405,8 @@ function getResidualWarning(
       severity: residualValue >= 25 || usefulLife >= 7 ? "urgent" : "warning",
       title:
         residualValue >= 25 || usefulLife >= 7
-          ? "This residual value is hard to defend."
-          : "This residual value needs support.",
+          ? "This residual value would be hard to defend."
+          : "This residual value needs support before I would be comfortable with it.",
       text:
         `${money(residualValue)} residual value is aggressive with a ${usefulLife}-year useful life. Once we are already assuming a long life, assuming more than ${money(10)} of value at disposal raises the risk of a future write-down if we cannot sell the equipment for that price.`,
     };
@@ -399,7 +416,7 @@ function getResidualWarning(
     severity: residualValue >= 25 ? "urgent" : "warning",
     title:
       residualValue >= 25
-        ? "This residual value may be too optimistic."
+        ? "This residual value looks too optimistic without market evidence."
         : "I would document this residual value carefully.",
     text:
       `${money(residualValue)} residual value is above the normal supportable range for a ${usefulLife}-year useful life. If we cannot sell the equipment for that amount at the end of its use for us, we could face a write-down later.`,
@@ -413,11 +430,57 @@ function getPolicyWarnings(policy = state) {
   ].filter(Boolean);
 }
 
+function getReasonableSchedule(years = 5) {
+  return calculateSchedule(reasonablePolicy, years);
+}
+
+function getOutcomeAccountingDetail(policy = state) {
+  const chosenSchedule = calculateSchedule(policy, Math.max(5, policy.usefulLife));
+  const reasonableSchedule = getReasonableSchedule(Math.max(5, policy.usefulLife));
+  const chosenDepreciation = sum(chosenSchedule.slice(0, 2).map((row) => row.depreciation));
+  const reasonableDepreciation = sum(reasonableSchedule.slice(0, 2).map((row) => row.depreciation));
+  const inflatedIncome = Math.max(0, reasonableDepreciation - chosenDepreciation);
+
+  return {
+    chosenDepreciation,
+    reasonableDepreciation,
+    inflatedIncome,
+    chosenShortTermIncome: sum(chosenSchedule.slice(0, 2).map((row) => row.netIncome)),
+    reasonableShortTermIncome: sum(reasonableSchedule.slice(0, 2).map((row) => row.netIncome)),
+  };
+}
+
+function getAggressiveAssumptionSummary(policy = state) {
+  const assumptions = [];
+  const usefulLifeWarning = getUsefulLifeWarning(policy.usefulLife);
+  const residualWarning = getResidualWarning(policy.usefulLife, policy.residualValue);
+
+  if (usefulLifeWarning) {
+    assumptions.push(
+      `${policy.usefulLife}-year useful life exceeded the normal 5-year support point`
+    );
+  }
+
+  if (residualWarning) {
+    assumptions.push(
+      `${money(policy.residualValue)} residual value exceeded the supportable range for a ${policy.usefulLife}-year useful life`
+    );
+  }
+
+  if (assumptions.length === 0) {
+    return "No aggressive estimate was flagged.";
+  }
+
+  return assumptions.join("; ");
+}
+
 function getAccountingTrouble(policy = state) {
   const usefulLifeWarning = getUsefulLifeWarning(policy.usefulLife);
   const residualWarning = getResidualWarning(policy.usefulLife, policy.residualValue);
   const warningCategories = [usefulLifeWarning, residualWarning].filter(Boolean);
   const hasUrgentWarning = warningCategories.some((warning) => warning.severity === "urgent");
+  const accountingDetail = getOutcomeAccountingDetail(policy);
+  const assumptionSummary = getAggressiveAssumptionSummary(policy);
 
   if (!hasUrgentWarning && warningCategories.length < 2) {
     return null;
@@ -426,17 +489,25 @@ function getAccountingTrouble(policy = state) {
   if (hasUrgentWarning) {
     return {
       key: "audit",
-      title: "Audit failure",
+      title: "18 months later: Audit failure and termination",
       text:
-        "The short-term numbers looked better, but the assumptions were too aggressive to defend. The auditors force a correction, the audit committee opens an investigation, and the board questions whether management used depreciation estimates to dress up earnings.",
+        `Eighteen months later, the assumptions were too aggressive to defend. The policy recorded ${money(accountingDetail.chosenDepreciation)} of depreciation in Years 1-2. Under a reasonable 5-year life and ${money(10)} residual value, depreciation would have been ${money(accountingDetail.reasonableDepreciation)}. That inflated Years 1-2 net income by about ${money(accountingDetail.inflatedIncome)}. The auditors forced a correction, and the board terminated the CEO after concluding that management had signed off on estimates this far outside the norm.`,
+      detailTitle: "What failed",
+      detailText:
+        `${assumptionSummary}. The issue was not just that near-term income improved; it improved because depreciation expense had been delayed using assumptions the company could not support. Because the CEO approved the policy, the audit failure became a leadership failure too.`,
     };
   }
 
   return {
     key: "press",
-    title: "Accounting controversy",
+    title: "12 months later: Bonus rescinded after accounting controversy",
     text:
-      "You avoided the immediate performance problem, but both the useful life and residual value assumptions raise red flags. A business press article questions the company's depreciation practices, investors notice, and the board has to respond publicly.",
+      `A few quarters later, analysts noticed the depreciation estimate. The policy recorded ${money(accountingDetail.chosenDepreciation)} of depreciation in Years 1-2 versus ${money(accountingDetail.reasonableDepreciation)} under a reasonable 5-year life and ${money(10)} residual value. That lifted Years 1-2 net income by about ${money(accountingDetail.inflatedIncome)}. The board concluded that the bonus had been earned on assumptions that were too aggressive, so it rescinded the payout.`,
+    detailTitle: "Why the board rescinded the bonus",
+    detailText:
+      `${assumptionSummary}. Auditors and analysts viewed those assumptions as aggressive because they reduced depreciation early while increasing the risk of a later write-down if the equipment could not be used or sold as estimated. The company avoided a full audit failure, but the board no longer treated the reported earnings as a clean basis for incentive pay.`,
+    headline:
+      "The Wall Street Journal: Company’s Depreciation Math Raises Questions About Earnings",
   };
 }
 
@@ -444,33 +515,91 @@ function getEmploymentOutcome(metrics) {
   if (metrics.shortTermIncome < performanceTargets.dangerShortTermIncome) {
     return {
       key: "fired",
-      title: "You got fired",
+      title: "6 months later: You got fired",
       text:
-        `${money(metrics.shortTermIncome)} in Years 1-2 net income missed the board's minimum target. The board decides the performance gap is too large and replaces the CEO.`,
+        `${money(metrics.shortTermIncome)} in Years 1-2 net income missed the board's minimum target. The board decided the performance gap was too large and replaced the CEO.`,
+      detailTitle: "What happened",
+      detailText:
+        "The accounting policy may have been supportable, but it did not produce the near-term earnings story the board wanted. The company recognized too much depreciation expense early to satisfy the short-term mandate.",
     };
   }
 
   if (metrics.shortTermIncome >= performanceTargets.bonusShortTermIncome) {
     return {
       key: "bonus",
-      title: "You kept your job and earned the bonus",
+      title: "12 months later: You earned the bonus",
       text:
-        `${money(metrics.shortTermIncome)} in Years 1-2 net income cleared the bonus threshold. The board is pleased with the near-term performance and approves the bonus.`,
+        `${money(metrics.shortTermIncome)} in Years 1-2 net income cleared the bonus threshold. The board was pleased with the near-term performance and approved the bonus.`,
+      detailTitle: "Why it worked",
+      detailText:
+        `The ${state.usefulLife}-year useful life was a little higher than the norm, but the ${money(state.residualValue)} residual value stayed within a supportable range. The policy improved near-term earnings without crossing into an audit failure.`,
     };
   }
 
   return {
     key: "safe",
-    title: "You kept your job, but no bonus",
+    title: "12 months later: You kept your job, but no bonus",
     text:
-      `${money(metrics.shortTermIncome)} in Years 1-2 net income kept you above the danger line, but it did not reach the bonus threshold. The board keeps you in the role but holds back the payout.`,
+      `${money(metrics.shortTermIncome)} in Years 1-2 net income kept you above the danger line, but it did not reach the bonus threshold. The board kept you in the role but held back the payout. The good news: your assumptions were supportable, which was exactly what a conservative accounting policy was supposed to achieve.`,
+    detailTitle: "What you did right",
+    detailText:
+      "You avoided leaning too hard on useful life or residual value to manufacture short-term earnings. That made the policy easier to explain to auditors, analysts, and the board.",
   };
+}
+
+function renderOutcomeDetails(outcome, metrics) {
+  const summaryItems = [
+    ["Method chosen", methodLabel(state.method)],
+    ["Useful life used", `${state.usefulLife} years`],
+    ["Residual value used", money(state.residualValue)],
+    ["Years 1-2 net income reported", money(metrics.shortTermIncome)],
+  ];
+
+  els.outcomeDetails.innerHTML = "";
+
+  const summary = document.createElement("dl");
+  summary.className = "outcome-summary";
+
+  summaryItems.forEach(([label, value]) => {
+    const item = document.createElement("div");
+    const term = document.createElement("dt");
+    const description = document.createElement("dd");
+    term.textContent = label;
+    description.textContent = value;
+    item.append(term, description);
+    summary.append(item);
+  });
+
+  els.outcomeDetails.append(summary);
+
+  if (outcome.detailTitle && outcome.detailText) {
+    const detail = document.createElement("section");
+    detail.className = "outcome-teaching-note";
+    const title = document.createElement("h3");
+    const text = document.createElement("p");
+    title.textContent = outcome.detailTitle;
+    text.textContent = outcome.detailText;
+    detail.append(title, text);
+    els.outcomeDetails.append(detail);
+  }
+
+  if (outcome.headline) {
+    const headline = document.createElement("aside");
+    headline.className = "outcome-headline";
+    const label = document.createElement("span");
+    const title = document.createElement("strong");
+    label.textContent = "Fictional press clipping";
+    title.textContent = outcome.headline;
+    headline.append(label, title);
+    els.outcomeDetails.append(headline);
+  }
 }
 
 function renderFinal(metrics) {
   if (!state.approved || !metrics) {
     els.finalPanel.classList.add("is-hidden");
     els.finalPanel.dataset.outcome = "";
+    els.outcomeDetails.innerHTML = "";
     return;
   }
 
@@ -481,6 +610,7 @@ function renderFinal(metrics) {
   els.finalPanel.dataset.outcome = outcome.key;
   els.finalTitle.textContent = outcome.title;
   els.finalText.textContent = outcome.text;
+  renderOutcomeDetails(outcome, metrics);
 }
 
 function getCfoReviewMessage() {
@@ -548,10 +678,7 @@ function createChatMessage(
       warningItem.className = `chat-warning is-${warning.severity}`;
 
       const warningTitle = document.createElement("strong");
-      warningTitle.textContent =
-        warning.severity === "urgent"
-          ? `Stronger warning: ${warning.title}`
-          : `Warning: ${warning.title}`;
+      warningTitle.textContent = warning.title;
 
       const warningText = document.createElement("p");
       warningText.textContent = warning.text;
@@ -605,10 +732,7 @@ function getChatMessages(prompt, reviewMode) {
         "The new equipment cost $100M. We expect $80M in annual revenue and $35M in other operating costs before depreciation. These are the numbers the dashboard will use.",
       actions:
         state.chatStage === "background"
-          ? [
-              { label: "Next: decision area", action: "show-decision-area" },
-              { label: "Skip tour", action: "skip-tour" },
-            ]
+          ? [{ label: "Next: decision area", action: "show-decision-area" }]
           : [],
     });
   }
@@ -680,6 +804,7 @@ function render() {
   els.landingScreen.classList.toggle("is-hidden", state.started);
   els.simulationScreen.classList.toggle("is-hidden", !state.started);
   els.simulationScreen.classList.toggle("is-opening", !state.dashboardOpen);
+  els.simulationScreen.classList.toggle("is-complete", state.approved);
   els.simulationScreen.classList.toggle(
     "is-dashboard-focus",
     state.dashboardOpen && ["background", "decision"].includes(state.chatStage)
@@ -696,7 +821,7 @@ function render() {
   els.scenarioTitle.textContent = scenario.title;
   els.scenarioDescription.textContent = scenario.description;
 
-  els.decisionHeading.textContent = state.approved ? "Decision approved" : prompt.step;
+  els.decisionHeading.textContent = state.approved ? "End of story" : prompt.step;
   renderChatMessages(prompt, reviewMode);
   const tutorial = state.tutorialStep ? tutorialSteps[state.tutorialStep] : null;
   const showTutorial = state.started && tutorial && state.activeStep === 0 && !state.approved;
@@ -762,6 +887,23 @@ function render() {
   renderFinal(metrics);
 }
 
+function resetGame() {
+  state = {
+    started: true,
+    activeStep: 0,
+    approved: false,
+    tutorialStep: null,
+    dashboardOpen: false,
+    chatStage: "opening",
+    tourSkipped: false,
+    method: null,
+    usefulLife: 3,
+    residualValue: 0,
+  };
+  previousChatMessageCount = 0;
+  render();
+}
+
 els.methodButtons.forEach((button) => {
   button.addEventListener("click", () => {
     state.method = button.dataset.method;
@@ -796,10 +938,6 @@ els.chatThread.addEventListener("click", (event) => {
     state.dashboardOpen = true;
     state.chatStage = "background";
     state.tourSkipped = false;
-  } else if (action === "skip-tour") {
-    state.dashboardOpen = true;
-    state.chatStage = "active";
-    state.tourSkipped = true;
   } else if (action === "show-decision-area") {
     state.chatStage = "decision";
   } else if (action === "start-decisions") {
@@ -820,6 +958,10 @@ els.nextButton.addEventListener("click", () => {
 
   render();
 });
+
+els.playAgainButton.addEventListener("click", resetGame);
+els.longTermButton.disabled = true;
+els.longTermButton.title = "Long-term focus scenario is next on the roadmap.";
 
 els.dismissTipButton.addEventListener("click", () => {
   if (state.tutorialStep === "background") {

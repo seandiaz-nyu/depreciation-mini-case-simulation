@@ -111,6 +111,13 @@
           <section class="final-panel is-hidden" id="finalPanel" aria-live="polite">
             <h2 id="finalTitle">Results</h2>
             <p id="finalText"></p>
+            <div class="outcome-details" id="outcomeDetails"></div>
+            <div class="outcome-actions">
+              <button class="primary-button" id="playAgainButton" type="button">Play again</button>
+              <button class="secondary-button" id="longTermButton" type="button">
+                Long-term focus
+              </button>
+            </div>
           </section>
 
           <div class="controls-grid">
@@ -153,6 +160,26 @@
           <section class="preview-panel" aria-label="Live preview">
             <article class="chart-card">
               <div class="chart-heading">
+                <div>
+                  <h2 id="incomeChartTitle">Net income over 5 years</h2>
+                </div>
+              </div>
+              <div class="target-panel" id="incomeTargetPanel" aria-live="polite">
+                <div>
+                  <span class="target-label">Years 1-2 target</span>
+                  <strong id="incomeTargetStatus">Choose a method to test performance.</strong>
+                </div>
+                <div
+                  class="target-thresholds"
+                  id="incomeTargetChips"
+                  aria-label="Years 1 and 2 net income thresholds"
+                ></div>
+              </div>
+              <div class="income-chart" id="incomeChart" aria-label="Net income by year"></div>
+            </article>
+
+            <article class="chart-card">
+              <div class="chart-heading">
                 <h2>Depreciation expense and book value</h2>
               </div>
               <div class="asset-table-wrap">
@@ -167,25 +194,6 @@
                   <tbody id="assetTableBody"></tbody>
                 </table>
               </div>
-            </article>
-
-            <article class="chart-card">
-              <div class="chart-heading">
-                <div>
-                  <h2 id="incomeChartTitle">Net income over 5 years</h2>
-                </div>
-              </div>
-              <div class="target-panel" id="incomeTargetPanel" aria-live="polite">
-                <div>
-                  <span class="target-label">Years 1-2 target</span>
-                  <strong id="incomeTargetStatus">Choose a method to test performance.</strong>
-                </div>
-                <div class="target-thresholds" aria-label="Years 1 and 2 net income thresholds">
-                  <span class="target-chip danger">Danger below $50M</span>
-                  <span class="target-chip bonus">Bonus at $60M+</span>
-                </div>
-              </div>
-              <div class="income-chart" id="incomeChart" aria-label="Net income by year"></div>
             </article>
           </section>
         </section>
