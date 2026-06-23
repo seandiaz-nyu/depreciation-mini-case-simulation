@@ -220,17 +220,20 @@ function getIncomeHorizon(policy = state) {
 function calculateSchedule(policy = state, years = getIncomeHorizon(policy)) {
   const schedule = [];
   let bookValue = facts.assetCost;
+  let accumulatedDepreciation = 0;
 
   for (let year = 1; year <= years; year += 1) {
     const depreciation = Math.min(
       depreciationForYear(policy, year, bookValue),
       Math.max(0, bookValue - policy.residualValue)
     );
+    accumulatedDepreciation += depreciation;
     bookValue = Math.max(policy.residualValue, bookValue - depreciation);
 
     schedule.push({
       year,
       depreciation,
+      accumulatedDepreciation,
       bookValue,
       revenue: facts.annualRevenue,
       netIncome: facts.annualRevenue - facts.otherCosts - depreciation,
@@ -379,6 +382,7 @@ function renderAssetTable(schedule) {
         <tr>
           <td>Year ${row.year}</td>
           <td>${money(row.depreciation)}</td>
+          <td>${money(row.accumulatedDepreciation)}</td>
           <td>${money(row.bookValue)}</td>
         </tr>
       `;
